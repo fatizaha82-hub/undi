@@ -3,17 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Undian Duit Kutu Live (6 Bulan)</title>
-    <!-- Tailwind CSS for layout utilities -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- JS Confetti for celebration effect -->
-    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
-    <!-- Firebase Realtime Database SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <title>Sistem Undian Duit Kutu Live (Google Sheets)</title>
     <style>
         :root {
             --bg-cream-light: #faf7f2;
@@ -21,109 +11,92 @@
             --card-border: #e2d9cc;
             --text-dark: #2d3748;
             --text-muted: #718096;
-            
             --turquoise-primary: #0d9488;
             --turquoise-light: #14b8a6;
             --turquoise-dark: #115e59;
-            --turquoise-glow: rgba(13, 148, 136, 0.25);
-
+            --turquoise-glow: rgba(13, 148, 136, 0.2);
             --cream-gradient: linear-gradient(135deg, #ffffff 0%, #fef3c7 50%, #fde68a 100%);
-            --cream-shadow: rgba(217, 119, 6, 0.25);
+            --cream-shadow: rgba(217, 119, 6, 0.2);
         }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-cream-light);
             color: var(--text-dark);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px 10px;
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
         }
 
-        .main-container {
+        .container {
+            width: 100%;
+            max-width: 900px;
             background: var(--bg-cream-card);
+            padding: 30px 20px;
+            border-radius: 20px;
             border: 1px solid var(--card-border);
-            box-shadow: 0 10px 30px rgba(180, 160, 140, 0.18);
+            box-shadow: 0 10px 30px rgba(180, 160, 140, 0.15);
         }
+
+        .header-title {
+            text-align: center;
+            color: var(--turquoise-dark);
+            font-size: 2.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--turquoise-primary);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--turquoise-primary);
+            background: white;
+            color: var(--turquoise-primary);
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .tab-btn.active { background: var(--turquoise-primary); color: white; }
 
         .section-box {
             background: #ffffff;
             border: 1px solid var(--card-border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            padding: 22px;
+            border-radius: 14px;
+            margin-bottom: 25px;
         }
 
-        /* Envelope Styles */
-        .envelope-card {
-            border-radius: 16px;
-            padding: 22px 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 160px;
-        }
+        label { display: block; font-weight: 600; margin-bottom: 10px; color: #334155; }
 
-        /* Unopened Turquoise Envelope */
-        .envelope-card.unopened {
-            background: linear-gradient(145deg, #0d9488, #115e59);
-            border: 2px solid var(--turquoise-light);
-            box-shadow: 0 6px 15px rgba(13, 148, 136, 0.25);
-            color: #ffffff;
-        }
-
-        .envelope-card.unopened:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 12px 25px rgba(13, 148, 136, 0.4);
-        }
-
-        .envelope-card.unopened .env-icon {
-            font-size: 2.8rem;
-            margin: 6px 0;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-            transition: transform 0.2s;
-        }
-
-        .envelope-card.unopened:hover .env-icon {
-            transform: scale(1.15) rotate(-5deg);
-        }
-
-        /* Opened Metallic Cream Envelope */
-        .envelope-card.opened {
-            background: var(--cream-gradient);
-            border: 2px solid #f59e0b;
-            color: #1e293b;
-            cursor: not-allowed;
-            box-shadow: 0 8px 20px var(--cream-shadow);
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .opened .env-month-large {
-            font-size: 1.45rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #78350f;
-            line-height: 1.2;
-            margin-bottom: 4px;
-        }
-
-        .opened .env-name-large {
-            font-size: 1.25rem;
-            font-weight: 800;
-            margin-top: 6px;
-            color: #0f172a;
-            background: #ffffff;
-            padding: 6px 12px;
-            border-radius: 8px;
+        input[type="text"], textarea, select {
             width: 100%;
-            word-break: break-word;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            padding: 14px;
+            background-color: #faf7f2;
+            border: 1px solid var(--card-border);
+            color: var(--text-dark);
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            outline: none;
         }
 
         select option.completed-player {
@@ -132,523 +105,413 @@
             font-style: italic;
         }
 
+        textarea { height: 150px; resize: vertical; }
+
+        .btn {
+            background: var(--turquoise-primary);
+            color: #fff;
+            border: none;
+            padding: 15px 20px;
+            font-weight: 800;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px var(--turquoise-glow);
+        }
+
+        .btn:hover { background: var(--turquoise-dark); }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            margin-top: 30px;
+        }
+
+        .status-bar {
+            margin-bottom: 20px;
+            padding: 14px;
+            background: #ccfbf1;
+            border-left: 4px solid var(--turquoise-primary);
+            color: var(--turquoise-dark);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .session-code-banner {
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            color: #78350f;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .envelopes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .envelope-card {
+            border-radius: 16px;
+            padding: 22px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px;
+        }
+
+        .envelope-card.unopened {
+            background: linear-gradient(145deg, #0d9488, #115e59);
+            border: 2px solid var(--turquoise-light);
+            color: #ffffff;
+        }
+
+        .envelope-card.unopened:hover { transform: translateY(-5px); }
+
+        .envelope-card.opened {
+            background: var(--cream-gradient);
+            border: 2px solid #f59e0b;
+            color: #1e293b;
+            cursor: not-allowed;
+        }
+
+        .opened .env-month-large {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #78350f;
+            margin-bottom: 4px;
+        }
+
+        .opened .env-name-large {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            background: #ffffff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .hidden { display: none !important; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--card-border); }
+        th { background: #f1f5f9; color: var(--turquoise-dark); }
+
         .badge-done {
             background: #fef3c7;
             color: #92400e;
-            padding: 6px 14px;
-            border-radius: 8px;
+            padding: 5px 12px;
+            border-radius: 6px;
             font-weight: 800;
             display: inline-block;
-            margin: 3px 4px 3px 0;
+            margin: 2px 4px 2px 0;
             border: 1px solid #fde68a;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
         }
     </style>
 </head>
-<body class="p-3 sm:p-6 flex justify-center items-start">
+<body>
 
-    <div class="main-container w-full max-w-4xl p-5 sm:p-8 rounded-3xl my-2">
-        
-        <!-- Header Banner -->
-        <header class="text-center mb-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-extrabold tracking-wide uppercase mb-2" id="viewModeBadge">
-                <i class="fa-solid fa-user-gear"></i> Mod Penganjur
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-teal-900 uppercase tracking-tight">
-                💎 Cabutan Undi Duit Kutu Live
-            </h1>
-            <p class="text-sm font-semibold text-teal-700 mt-1">Sistem Undian 6 Bulan (2 Orang Setiap Bulan)</p>
-        </header>
+<div class="container">
+    <div class="header-title">💎 Cabutan Undi Duit Kutu</div>
+    <p class="subtitle">Sistem Undian 6 Bulan (2 Orang Setiap Bulan)</p>
 
-        <!-- ADMIN ONLY SECTION: Setup Names and Session Links -->
-        <div id="adminSetupSection" class="section-box p-5 rounded-2xl mb-6">
-            <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
-                <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-teal-600"></i> Pengurusan Peserta (12 Orang)
-                </h2>
-                <button type="button" onclick="loadDefaultNames()" class="text-xs font-bold text-teal-700 hover:text-teal-900 transition-colors">
-                    <i class="fa-solid fa-rotate-left"></i> Isi Nama Contoh
-                </button>
-            </div>
-
-            <label for="namesInput" class="block text-xs font-semibold text-slate-600 mb-2">
-                Masukkan Senarai Nama Peserta (1 Nama Setiap Baris):
-            </label>
-            <textarea id="namesInput" rows="5" class="w-full p-3 rounded-xl border border-slate-300 bg-amber-50/30 text-slate-800 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4" placeholder="Masukkan 12 nama peserta..."></textarea>
-
-            <button type="button" onclick="createOrUpdateSession()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-3.5 px-5 rounded-xl uppercase tracking-wider text-sm transition-all shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-bolt"></i> Cipta / Kemaskini Sesi Undian
-            </button>
-
-            <!-- Player Link Generator Box -->
-            <div id="shareBox" class="mt-5 p-4 rounded-xl bg-teal-50 border border-teal-200 space-y-2">
-                <span class="text-xs font-bold text-teal-900 uppercase tracking-wider block">
-                    <i class="fa-solid fa-share-nodes"></i> Pautan & Kod Cabutan Peserta:
-                </span>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="playerLinkInput" readonly class="flex-1 bg-white border border-teal-300 text-teal-900 text-xs font-mono px-3 py-2.5 rounded-lg focus:outline-none">
-                    <button type="button" onclick="copyPlayerLink()" class="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-copy"></i> Salin Link Peserta
-                    </button>
-                </div>
-                <p class="text-[11px] text-teal-700 italic">
-                    * Hantar pautan di atas ke kumpulan WhatsApp peserta. Peserta hanya akan melihat skrin cabutan sahaja.
-                </p>
-            </div>
+    <div id="authView">
+        <div class="tab-group">
+            <button id="tabCreate" class="tab-btn active" onclick="switchTab('create')">Penganjur (Cipta Sesi)</button>
+            <button id="tabJoin" class="tab-btn" onclick="switchTab('join')">Peserta (Masuk Sesi)</button>
         </div>
 
-        <!-- MAIN DRAW AREA (Visible for both Admin and Player) -->
-        <div id="drawArea" class="space-y-6">
-
-            <!-- Active Player Selector Box -->
-            <div class="section-box p-4 sm:p-5 rounded-2xl border-2 border-teal-500/30">
-                <label for="activePlayer" class="block text-xs font-bold uppercase tracking-wider text-teal-800 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-user-tag text-teal-600 text-sm"></i> Pilih Nama Peserta Yang Sedang Cabut:
-                </label>
-                <select id="activePlayer" onchange="checkPlayerSelection()" class="w-full p-3.5 rounded-xl border border-slate-300 bg-white text-slate-800 font-bold text-base focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">-- Sila Pilih Nama Peserta --</option>
-                </select>
-            </div>
-
-            <!-- Status Guidance Bar -->
-            <div id="statusBar" class="p-3.5 rounded-xl bg-teal-100/80 border-l-4 border-teal-600 text-teal-900 font-bold text-center text-sm shadow-sm transition-all">
-                Sila pilih nama peserta dari menu di atas.
-            </div>
-
-            <!-- Interactive Envelopes Grid -->
-            <div>
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-envelope-open-text text-teal-600"></i> Pilih Sampul Cabutan
-                    </h3>
-                    <span class="text-xs font-semibold text-slate-500">12 Sampul Rahsia</span>
-                </div>
-                <div id="envelopesContainer" class="envelopes-grid">
-                    <!-- Dynamic Envelopes rendered here -->
-                </div>
-            </div>
-
-            <!-- Live Results Table (6 Months) -->
-            <div class="section-box p-5 rounded-2xl space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-200 pb-3">
-                    <h3 class="text-base font-extrabold text-teal-900 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-list text-amber-500"></i> Keputusan Rasmi Penerima Kutu (6 Bulan)
-                    </h3>
-                    <button type="button" onclick="copyResultsWhatsApp()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-3 py-2 rounded-lg transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto">
-                        <i class="fa-brands fa-whatsapp text-sm"></i> Salin Keputusan (WhatsApp)
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table class="w-full text-left border-collapse bg-white">
-                        <thead>
-                            <tr class="bg-slate-100 text-teal-900 text-xs uppercase font-extrabold border-b border-slate-200">
-                                <th class="p-3.5 w-1/3">Bulan</th>
-                                <th class="p-3.5 w-2/3">Nama Penerima</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultTableBody" class="divide-y divide-slate-200 text-sm font-medium">
-                            <!-- Rows injected here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Admin Reset Button -->
-                <button type="button" id="adminResetBtn" onclick="resetSession()" class="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-md mt-4 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> Reset & Mula Sesi Baru (Penganjur)
-                </button>
-            </div>
-
+        <div id="createSection" class="section-box">
+            <label for="namesInput">📝 Masukkan Senarai 12 Nama Peserta (1 Nama Setiap Baris):</label>
+            <textarea id="namesInput">...</textarea>
+            <button type="button" class="btn" onclick="createSession()">✨ Cipta Sesi Undian</button>
         </div>
 
+        <div id="joinSection" class="section-box hidden">
+            <label for="codeInput">🔑 Masukkan Kod Sesi (6-Angka daripada Penganjur):</label>
+            <input type="text" id="codeInput" placeholder="Contoh: 839201" maxlength="6" style="text-align:center; font-size:1.3rem; letter-spacing:3px;">
+            <button type="button" class="btn" onclick="joinSession()">🚀 Masuk Sesi Undian</button>
+        </div>
     </div>
 
-    <script>
-        // Global App State
-        const sampleNames = [
-            "Ahmad", "Siti", "Ali", "Musa", 
-            "Aina", "Bakar", "Chit", "Danial", 
-            "Elena", "Farah", "Ghani", "Hana"
-        ];
+    <div id="drawView" class="hidden">
+        <div class="session-code-banner" id="sessionCodeDisplay">KOD SESI: -</div>
 
-        let mode = 'admin'; // 'admin' or 'player'
-        let sessionCode = 'DEFAULT';
-        let sessionData = {
-            players: [],
-            secretEnvelopes: [],
-            results: {} // key: slotIndex, val: { player, month }
-        };
+        <div class="section-box" style="margin-bottom: 15px;">
+            <label for="activePlayer">👤 Pilih Nama Peserta Yang Sedang Cabut:</label>
+            <select id="activePlayer" onchange="checkPlayerSelection()"></select>
+        </div>
 
-        const jsConfetti = new JSConfetti();
+        <div class="status-bar" id="statusText">Memuatkan data dari Google Sheets...</div>
 
-        // Firebase Optional Realtime Sync Fallback
-        const firebaseConfig = {
-            databaseURL: "https://kutu-app-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
-        let db = null;
-        try {
-            if (window.firebase && firebase.initializeApp) {
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-            }
-        } catch(e) {
-            console.log("Firebase fallback disabled, relying on LocalStorage multi-tab sync.");
+        <div class="envelopes-grid" id="envelopesContainer"></div>
+
+        <h3 style="margin-top: 35px; color: var(--turquoise-dark); font-size: 1.2rem;">📊 Keputusan Rasmi Penerima Kutu (6 Bulan)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bulan</th>
+                    <th>Nama Penerima</th>
+                </tr>
+            </thead>
+            <tbody id="resultTable"></tbody>
+        </table>
+
+        <button type="button" class="btn btn-reset" onclick="resetAll()">🔄 Keluar / Mula Sesi Baru</button>
+    </div>
+</div>
+
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNYfLVyfkWBLb4vaw4OpJKAySqPxK9zMIvdC2G4EK2ZHZju8ZY1A2Xl_yUQalv6Qz9/exec";
+
+    let currentCode = null;
+    let sessionData = null;
+    let syncTimer = null;
+
+    function switchTab(type) {
+        if(type === 'create') {
+            document.getElementById('tabCreate').classList.add('active');
+            document.getElementById('tabJoin').classList.remove('active');
+            document.getElementById('createSection').classList.remove('hidden');
+            document.getElementById('joinSection').classList.add('hidden');
+        } else {
+            document.getElementById('tabJoin').classList.add('active');
+            document.getElementById('tabCreate').classList.remove('active');
+            document.getElementById('joinSection').classList.remove('hidden');
+            document.getElementById('createSection').classList.add('hidden');
+        }
+    }
+
+    async function createSession() {
+        const input = document.getElementById('namesInput').value.trim();
+        if (!input) return alert('Sila masukkan senarai nama peserta!');
+
+        const players = input.split('\n').map(n => n.trim()).filter(n => n !== '');
+        if (players.length === 0) return alert('Sila masukkan sekurang-kurangnya 1 nama.');
+
+        const sessionCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        let drawSlots = [];
+        const totalMonths = Math.ceil(players.length / 2);
+        for (let i = 1; i <= totalMonths; i++) {
+            drawSlots.push({ month: `Bulan ${i}` });
+            drawSlots.push({ month: `Bulan ${i}` });
+        }
+        drawSlots = drawSlots.slice(0, players.length);
+
+        let secretEnvelopes = [...drawSlots];
+        for (let i = secretEnvelopes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [secretEnvelopes[i], secretEnvelopes[j]] = [secretEnvelopes[j], secretEnvelopes[i]];
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const modeParam = urlParams.get('mode');
-            const codeParam = urlParams.get('code');
+        sessionData = {
+            players: players,
+            secretEnvelopes: secretEnvelopes,
+            totalMonths: totalMonths,
+            results: {}
+        };
 
-            if (codeParam) {
-                sessionCode = codeParam.toUpperCase();
-            }
+        alert('Mencipta sesi baru di Google Sheets...');
 
-            if (modeParam === 'player') {
-                mode = 'player';
-                document.getElementById('adminSetupSection').classList.add('hidden');
-                document.getElementById('adminResetBtn').classList.add('hidden');
-                document.getElementById('viewModeBadge').className = "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold tracking-wide uppercase mb-2";
-                document.getElementById('viewModeBadge').innerHTML = `<i class="fa-solid fa-users"></i> Mod Peserta`;
-            } else {
-                mode = 'admin';
-                loadDefaultNames();
-            }
-
-            // Sync with LocalStorage
-            loadSessionData();
-
-            // Setup Cross-Tab Storage Listener
-            window.addEventListener('storage', (e) => {
-                if (e.key === `kutu_session_${sessionCode}`) {
-                    loadSessionData();
-                }
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: sessionCode, data: sessionData })
             });
 
-            // Firebase Live Listener (if available)
-            if (db) {
-                db.ref('kutu_sessions/' + sessionCode).on('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        sessionData = snapshot.val();
-                        if (!sessionData.results) sessionData.results = {};
-                        saveToLocalOnly(sessionData);
-                        renderAll();
-                    }
-                });
-            }
-        });
-
-        function loadDefaultNames() {
-            const textarea = document.getElementById('namesInput');
-            if (textarea && !textarea.value.trim()) {
-                textarea.value = sampleNames.join('\n');
-            }
+            listenToSession(sessionCode);
+        } catch (err) {
+            alert('Ralat menyimpan ke Google Sheets: ' + err.message);
         }
+    }
 
-        function generatePlayerLink() {
-            const baseUrl = window.location.origin + window.location.pathname;
-            return `${baseUrl}?mode=player&code=${sessionCode}`;
-        }
+    function joinSession() {
+        const code = document.getElementById('codeInput').value.trim();
+        if (code.length !== 6) return alert('Sila masukkan Kod Sesi 6-Angka yang sah!');
+        listenToSession(code);
+    }
 
-        function updateShareBox() {
-            const linkInput = document.getElementById('playerLinkInput');
-            if (linkInput) {
-                linkInput.value = generatePlayerLink();
-            }
-        }
+    function listenToSession(code) {
+        currentCode = code;
+        document.getElementById('authView').classList.add('hidden');
+        document.getElementById('drawView').classList.remove('hidden');
+        document.getElementById('sessionCodeDisplay').innerText = `🔑 KOD SESI: ${code}`;
 
-        function loadSessionData() {
-            const localData = localStorage.getItem(`kutu_session_${sessionCode}`);
-            if (localData) {
-                try {
-                    sessionData = JSON.parse(localData);
-                    if (!sessionData.results) sessionData.results = {};
-                } catch(e) {
-                    console.error("Localstorage parse error", e);
-                }
-            } else if (mode === 'admin') {
-                // Initialize new session if admin
-                createOrUpdateSession();
+        fetchDataFromSheets();
+        if (syncTimer) clearInterval(syncTimer);
+        syncTimer = setInterval(fetchDataFromSheets, 3000); // Sync automatik setiap 3 saat
+    }
+
+    async function fetchDataFromSheets() {
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=get&code=${currentCode}`);
+            const data = await res.json();
+
+            if (data.status === "error") {
+                document.getElementById('statusText').innerText = "Ralat: Kod Sesi tidak dijumpai dalam Google Sheets.";
                 return;
             }
-            updateShareBox();
-            renderAll();
-        }
 
-        function saveSessionState(data) {
             sessionData = data;
-            saveToLocalOnly(data);
+            if(!sessionData.results) sessionData.results = {};
 
-            if (db) {
-                db.ref('kutu_sessions/' + sessionCode).set(data);
-            }
-        }
-
-        function saveToLocalOnly(data) {
-            localStorage.setItem(`kutu_session_${sessionCode}`, JSON.stringify(data));
-        }
-
-        function createOrUpdateSession() {
-            const input = document.getElementById('namesInput').value.trim();
-            if (!input) {
-                alert('Sila masukkan senarai nama peserta terlebih dahulu!');
-                return;
-            }
-
-            const rawPlayers = input.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-            if (rawPlayers.length === 0) {
-                alert('Sila masukkan sekurang-kurangnya 1 nama.');
-                return;
-            }
-
-            // Generate Session Code if default
-            if (sessionCode === 'DEFAULT') {
-                sessionCode = 'KUTU' + Math.floor(100 + Math.random() * 900);
-            }
-
-            // Build Exactly 6 Months (2 slots per month)
-            const drawSlots = [];
-            const totalMonths = Math.ceil(rawPlayers.length / 2);
-
-            for (let i = 1; i <= totalMonths; i++) {
-                drawSlots.push({ month: `Bulan ${i}` });
-                drawSlots.push({ month: `Bulan ${i}` });
-            }
-
-            // Trim exact size to participant count
-            const finalSlots = drawSlots.slice(0, rawPlayers.length);
-
-            // Secret Fisher-Yates Envelope Shuffle
-            const shuffledEnvelopes = [...finalSlots];
-            for (let i = shuffledEnvelopes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledEnvelopes[i], shuffledEnvelopes[j]] = [shuffledEnvelopes[j], shuffledEnvelopes[i]];
-            }
-
-            const newData = {
-                players: rawPlayers,
-                secretEnvelopes: shuffledEnvelopes,
-                results: {}
-            };
-
-            saveSessionState(newData);
-            updateShareBox();
-            renderAll();
-
-            if (mode === 'admin') {
-                alert(`Sesi undian ${sessionCode} berjaya dicipta! Sedia untuk cabutan.`);
-            }
-        }
-
-        function renderAll() {
             renderPlayerDropdown();
             renderEnvelopes();
-            renderResultTable();
+            renderTable();
+        } catch (err) {
+            console.error("Gagal muat data Google Sheets:", err);
         }
+    }
 
-        function renderPlayerDropdown() {
-            const select = document.getElementById('activePlayer');
-            if (!select) return;
+    function renderPlayerDropdown() {
+        const select = document.getElementById('activePlayer');
+        const selectedVal = select.value;
+        select.innerHTML = '';
+        
+        const results = sessionData.results || {};
+        const takenPlayers = Object.values(results).map(r => r.player);
 
-            const selectedValue = select.value;
-            select.innerHTML = '';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = "";
+        defaultOpt.textContent = "-- Pilih Nama Peserta --";
+        select.appendChild(defaultOpt);
 
-            const results = sessionData.results || {};
-            const takenPlayers = new Set(Object.values(results).map(r => r.player));
-
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = "";
-            defaultOpt.textContent = "-- Pilih Nama Peserta --";
-            select.appendChild(defaultOpt);
-
-            let activeCount = 0;
-            const players = sessionData.players || [];
-
-            players.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                
-                if (takenPlayers.has(p)) {
-                    opt.textContent = `${p} (Selesai Cabut)`;
-                    opt.disabled = true;
-                    opt.className = 'completed-player';
-                } else {
-                    opt.textContent = p;
-                    activeCount++;
-                }
-                select.appendChild(opt);
-            });
-
-            if (selectedValue && !takenPlayers.has(selectedValue)) {
-                select.value = selectedValue;
-            }
-
-            const statusBar = document.getElementById('statusBar');
-            if (activeCount === 0 && players.length > 0) {
-                statusBar.innerText = '🎉 Semua peserta telah selesai membuat cabutan!';
-                statusBar.className = 'p-3.5 rounded-xl bg-emerald-100 border-l-4 border-emerald-600 text-emerald-900 font-bold text-center text-sm shadow-sm';
+        let activeCount = 0;
+        sessionData.players.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            if (takenPlayers.includes(p)) {
+                opt.textContent = `${p} (Selesai Cabut)`;
+                opt.disabled = true;
+                opt.className = 'completed-player';
             } else {
-                if (!select.value) {
-                    statusBar.innerText = 'Sila pilih nama peserta dari menu di atas, kemudian klik mana-mana Sampul Turquoise!';
-                    statusBar.className = 'p-3.5 rounded-xl bg-teal-100/80 border-l-4 border-teal-600 text-teal-900 font-bold text-center text-sm shadow-sm';
-                }
+                opt.textContent = p;
+                activeCount++;
             }
+            select.appendChild(opt);
+        });
+
+        if (selectedVal && !takenPlayers.includes(selectedVal)) {
+            select.value = selectedVal;
         }
 
-        function checkPlayerSelection() {
-            const selectedPlayer = document.getElementById('activePlayer').value;
-            const statusBar = document.getElementById('statusBar');
-            if (selectedPlayer) {
-                statusBar.innerText = `Sila minta [ ${selectedPlayer} ] memilih mana-mana Sampul Kad di bawah!`;
-            }
+        if (activeCount === 0) {
+            document.getElementById('statusText').innerText = '🎉 Semua peserta telah selesai membuat cabutan!';
+            document.getElementById('statusText').style.background = '#d1fae5';
+            document.getElementById('statusText').style.color = '#047857';
+        } else {
+            document.getElementById('statusText').innerText = 'Sila pilih nama peserta dari menu di atas, kemudian klik mana-mana Sampul Turquoise!';
+            document.getElementById('statusText').style.background = '#ccfbf1';
+            document.getElementById('statusText').style.color = 'var(--turquoise-dark)';
         }
+    }
 
-        function renderEnvelopes() {
-            const container = document.getElementById('envelopesContainer');
-            if (!container) return;
-            container.innerHTML = '';
+    function checkPlayerSelection() {
+        const selectedPlayer = document.getElementById('activePlayer').value;
+        if (selectedPlayer) {
+            document.getElementById('statusText').innerText = `Sila minta [ ${selectedPlayer} ] memilih mana-mana Sampul Kad di bawah!`;
+        }
+    }
 
-            const envelopes = sessionData.secretEnvelopes || [];
-            const results = sessionData.results || {};
+    function renderEnvelopes() {
+        const container = document.getElementById('envelopesContainer');
+        container.innerHTML = '';
+        const results = sessionData.results || {};
 
-            envelopes.forEach((assignedSlot, index) => {
-                const envNum = index + 1;
-                const isOpened = results[envNum] !== undefined;
+        sessionData.secretEnvelopes.forEach((assignedSlot, index) => {
+            const envNum = index + 1;
+            const card = document.createElement('div');
+            const isOpened = results[envNum] !== undefined;
 
-                const card = document.createElement('div');
+            if (!isOpened) {
+                card.className = 'envelope-card unopened';
+                card.onclick = () => pickEnvelope(envNum, assignedSlot);
+                card.innerHTML = `<div class="env-icon">✉️</div><div style="font-size:0.85rem; color:#e0f2fe; font-weight:700;">KLIK CABUT</div>`;
+            } else {
+                card.className = 'envelope-card opened';
+                card.innerHTML = `<div class="env-month-large">${results[envNum].month}</div><div class="env-name-large">${results[envNum].player}</div>`;
+            }
+            container.appendChild(card);
+        });
+    }
 
-                if (!isOpened) {
-                    card.className = 'envelope-card unopened';
-                    card.onclick = () => pickEnvelope(envNum, assignedSlot);
-                    card.innerHTML = `
-                        <div class="env-icon">✉️</div>
-                        <div style="font-size:0.85rem; color:#e0f2fe; font-weight:700;">KLIK CABUT</div>
-                    `;
-                } else {
-                    card.className = 'envelope-card opened';
-                    card.innerHTML = `
-                        <div class="env-month-large">${results[envNum].month}</div>
-                        <div class="env-name-large">${results[envNum].player}</div>
-                    `;
-                }
+    async function pickEnvelope(envNum, assignedSlot) {
+        const playerSelect = document.getElementById('activePlayer');
+        const selectedPlayer = playerSelect.value;
+        if (!selectedPlayer) return alert('Sila pilih Nama Peserta terlebih dahulu!');
 
-                container.appendChild(card);
+        sessionData.results[envNum] = {
+            player: selectedPlayer,
+            month: assignedSlot.month
+        };
+
+        document.getElementById('statusText').innerText = 'Menyimpan cabutan ke Google Sheets...';
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: currentCode, data: sessionData })
             });
+
+            fetchDataFromSheets();
+        } catch (err) {
+            alert('Gagal menyimpan cabutan!');
         }
+    }
 
-        function pickEnvelope(envNum, assignedSlot) {
-            const playerSelect = document.getElementById('activePlayer');
-            const selectedPlayer = playerSelect.value;
+    function renderTable() {
+        const tbody = document.getElementById('resultTable');
+        tbody.innerHTML = '';
+        const results = sessionData.results || {};
 
-            if (!selectedPlayer) {
-                alert('Sila pilih Nama Peserta yang ingin membuat cabutan pada menu dropdown terlebih dahulu!');
-                playerSelect.focus();
-                return;
+        for (let i = 1; i <= sessionData.totalMonths; i++) {
+            const monthName = `Bulan ${i}`;
+            let recipients = [];
+            for (let env in results) {
+                if (results[env].month === monthName) recipients.push(results[env].player);
             }
-
-            const updatedResults = { ...(sessionData.results || {}) };
-            updatedResults[envNum] = {
-                player: selectedPlayer,
-                month: assignedSlot.month
-            };
-
-            const updatedSessionData = {
-                ...sessionData,
-                results: updatedResults
-            };
-
-            saveSessionState(updatedSessionData);
-            jsConfetti.addConfetti({ emojis: ['🎉', '👑', '💰', '✨'] });
-            renderAll();
+            let recipientHTML = recipients.length > 0 ? recipients.map(p => `<span class="badge-done">👑 ${p}</span>`).join(' ') : '<span style="color:var(--text-muted)">Belum dicabut</span>';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><strong>${monthName}</strong></td><td>${recipientHTML}</td>`;
+            tbody.appendChild(tr);
         }
+    }
 
-        function renderResultTable() {
-            const tbody = document.getElementById('resultTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const players = sessionData.players || [];
-            const totalMonths = Math.ceil(players.length / 2) || 6;
-            const results = sessionData.results || {};
-
-            for (let i = 1; i <= totalMonths; i++) {
-                const monthName = `Bulan ${i}`;
-                let recipients = [];
-
-                for (let envKey in results) {
-                    if (results[envKey].month === monthName) {
-                        recipients.push(results[envKey].player);
-                    }
-                }
-
-                let recipientHTML = '<span class="text-slate-400 italic text-xs">Belum dicabut</span>';
-                if (recipients.length > 0) {
-                    recipientHTML = recipients.map(p => `<span class="badge-done">👑 ${p}</span>`).join(' ');
-                }
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="p-3.5 font-bold text-slate-800">${monthName}</td>
-                    <td class="p-3.5">${recipientHTML}</td>
-                `;
-                tbody.appendChild(tr);
-            }
+    function resetAll() {
+        if (confirm('Adakah anda pasti ingin keluar dari sesi ini?')) {
+            location.reload();
         }
+    }
+</script>
 
-        function copyPlayerLink() {
-            const linkInput = document.getElementById('playerLinkInput');
-            if (!linkInput) return;
-            linkInput.select();
-            document.execCommand('copy');
-            alert('Pautan Peserta berjaya disalin! Tampal pautan ini ke kumpulan WhatsApp anda.');
-        }
-
-        function copyResultsWhatsApp() {
-            const players = sessionData.players || [];
-            const totalMonths = Math.ceil(players.length / 2) || 6;
-            const results = sessionData.results || {};
-
-            let text = `📌 *KEPUTUSAN RASMI CABUTAN DUIT KUTU (6 BULAN)*\n`;
-            text += `====================================\n`;
-
-            for (let i = 1; i <= totalMonths; i++) {
-                const monthName = `Bulan ${i}`;
-                let recipients = [];
-
-                for (let envKey in results) {
-                    if (results[envKey].month === monthName) {
-                        recipients.push(results[envKey].player);
-                    }
-                }
-
-                const winnerText = recipients.length > 0 ? recipients.join(' & ') : '[ Belum Dicabut ]';
-                text += `🗓️ *${monthName}*: ${winnerText}\n`;
-            }
-
-            text += `====================================\n`;
-            text += `_Diselenggarakan secara live di Sistem Kutu Live_`;
-
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            alert('Keputusan lengkap berjaya disalin! Sedia untuk ditampal ke WhatsApp.');
-        }
-
-        function resetSession() {
-            if (confirm('Adakah anda pasti ingin reset semula semua cabutan bagi sesi ini?')) {
-                const resetData = {
-                    ...sessionData,
-                    results: {}
-                };
-                saveSessionState(resetData);
-                renderAll();
-            }
-        }
-    </script>
 </body>
 </html>
