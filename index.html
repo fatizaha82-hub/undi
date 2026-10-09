@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Undian Duit Kutu Sync Live</title>
-    <!-- Firebase Libraries (Persediaan Pangkalan Data Realtime) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <title>Sistem Undian Duit Kutu Live</title>
     <style>
         :root {
             /* Palette: Cream Cair Background & Turquoise Accents */
@@ -88,7 +84,7 @@
             outline: none;
         }
 
-        /* Warna kelabu & italic untuk nama yang selesai */
+        /* Warna kelabu untuk nama yang sudah cabut */
         select option.completed-player {
             color: #94a3b8 !important;
             background-color: #f1f5f9 !important;
@@ -186,12 +182,6 @@
             border: 2px solid #f59e0b;
             color: #1e293b;
             cursor: not-allowed;
-            animation: popIn 0.3s ease-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0.85); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         .opened .env-month-large {
@@ -248,11 +238,22 @@
     <!-- SKRIN PENGANJUR: MASUKKAN NAMA BAHARU -->
     <div id="setupView" class="section-box">
         <label for="namesInput">📝 Masukkan Senarai Nama Peserta Sesi Ini (1 Nama Setiap Baris):</label>
-        <textarea id="namesInput" placeholder="Masukkan nama peserta di sini...&#10;Contoh:&#10;Ahmad&#10;Siti&#10;Ali">...</textarea>
+        <textarea id="namesInput" placeholder="Masukkan nama peserta di sini...&#10;Contoh:&#10;Ahmad&#10;Siti&#10;Ali">Ahmad
+Siti
+Ali
+Musa
+Aina
+Bakar
+Chit
+Danial
+Elena
+Farah
+Ghani
+Hana</textarea>
         <button type="button" class="btn" onclick="createSession()">✨ Cipta Sesi & Jana Pautan WhatsApp</button>
     </div>
 
-    <!-- SKRIN CABUTAN LIVE -->
+    <!-- SKRIN CABUTAN -->
     <div id="drawView" class="hidden">
         
         <div class="share-box" id="shareBox">
@@ -266,7 +267,7 @@
             <select id="activePlayer" onchange="checkPlayerSelection()"></select>
         </div>
 
-        <div class="status-bar" id="statusText">Menghubungkan ke pelayan live...</div>
+        <div class="status-bar" id="statusText">Sila pilih nama peserta dari menu di atas.</div>
 
         <div class="envelopes-grid" id="envelopesContainer"></div>
 
@@ -286,28 +287,32 @@
 </div>
 
 <script>
-    // Konfigurasi Database Realtime Awam
-    const firebaseConfig = {
-        databaseURL: "https://kutu-app-default-rtdb.asia-southeast1.firebasedatabase.app/"
-    };
-    
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
-
-    let currentSessionCode = null;
     let sessionData = null;
 
-    // SEMAK JIKA PESERTA BUKA PAUTAN (MENGANDUNGI #KOD_SESI)
+    // BILA PESERTA TEKAN LINK WHATSAPP, BACA NAMA TERUS DARI URL
     window.onload = function() {
         if (window.location.hash && window.location.hash.length > 1) {
-            const code = window.location.hash.substring(1);
-            connectRealtimeSession(code);
+            try {
+                const hashData = window.location.hash.substring(1);
+                const decodedJson = decodeURIComponent(escape(atob(hashData)));
+                sessionData = JSON.parse(decodedJson);
+
+                if (sessionData && sessionData.players && sessionData.players.length > 0) {
+                    document.getElementById('setupView').classList.add('hidden');
+                    document.getElementById('drawView').classList.remove('hidden');
+                    document.getElementById('shareBox').classList.add('hidden'); // Sembunyikan borang pautan untuk peserta
+
+                    renderPlayerDropdown();
+                    renderEnvelopes();
+                    renderTable();
+                }
+            } catch(e) {
+                console.error("Ralat membaca data sesi dari pautan:", e);
+            }
         }
     };
 
-    // PENGANJUR CIPTA SESI BAHARU
+    // PENGANJUR CIPTA SESI BAHARU DENGAN NAMA BERBEZA
     function createSession() {
         const input = document.getElementById('namesInput').value.trim();
         if (!input) return alert('Sila masukkan senarai nama peserta terlebih dahulu!');
@@ -324,71 +329,43 @@
         }
         drawSlots = drawSlots.slice(0, players.length);
 
-        // Rawakkan Sampul (Fisher-Yates Shuffle)
+        // Rawakkan giliran bulan (Fisher-Yates Shuffle)
         let secretEnvelopes = [...drawSlots];
         for (let i = secretEnvelopes.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [secretEnvelopes[i], secretEnvelopes[j]] = [secretEnvelopes[j], secretEnvelopes[i]];
         }
 
-        // Jana Kod Sesi 6-Angka
-        currentSessionCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const payload = {
+        sessionData = {
             players: players,
             secretEnvelopes: secretEnvelopes,
             totalMonths: totalMonths,
-            results: false
+            results: {}
         };
 
-        // Simpan ke Realtime Database
-        db.ref('sessions/' + currentSessionCode).set(payload, (error) => {
-            if (error) {
-                alert('Ralat sambungan. Sila pastikan anda mempunyai capaian internet.');
-            } else {
-                // Sediakan pautan khas peserta
-                window.location.hash = currentSessionCode;
-                const shareUrl = `${window.location.origin}${window.location.pathname}#${currentSessionCode}`;
-                document.getElementById('shareUrlInput').value = shareUrl;
+        // ENCODE SENARAI NAMA MASUK KE DALAM LINK
+        const jsonString = JSON.stringify(sessionData);
+        const encodedHash = btoa(unescape(encodeURIComponent(jsonString)));
+        
+        window.location.hash = encodedHash;
 
-                connectRealtimeSession(currentSessionCode);
-            }
-        });
-    }
+        // Pautan sedia untuk dihantar ke WhatsApp
+        const shareUrl = `${window.location.origin}${window.location.pathname}#${encodedHash}`;
+        document.getElementById('shareUrlInput').value = shareUrl;
 
-    // MENHUBUNGKAN KE REALTIME DATABASE (SYNC TERKINI)
-    function connectRealtimeSession(code) {
-        currentSessionCode = code;
         document.getElementById('setupView').classList.add('hidden');
         document.getElementById('drawView').classList.remove('hidden');
 
-        // Kemaskini link pautan dalam kotak kongsi
-        const shareUrl = `${window.location.origin}${window.location.pathname}#${code}`;
-        document.getElementById('shareUrlInput').value = shareUrl;
-
-        // Dengar perubahan secara LIVE daripada Database
-        db.ref('sessions/' + code).on('value', (snapshot) => {
-            sessionData = snapshot.val();
-            
-            if (!sessionData) {
-                alert('Sesi ini tidak wujud atau telah direset oleh Penganjur.');
-                window.location.href = window.location.pathname;
-                return;
-            }
-
-            if (!sessionData.results) sessionData.results = {};
-
-            renderPlayerDropdown();
-            renderEnvelopes();
-            renderTable();
-        });
+        renderPlayerDropdown();
+        renderEnvelopes();
+        renderTable();
     }
 
     function copyLink() {
         const copyText = document.getElementById("shareUrlInput");
         copyText.select();
         document.execCommand("copy");
-        alert("Pautan Live telah disalin! Anda boleh tampal (paste) ke WhatsApp sekarang.");
+        alert("Pautan telah disalin! Boleh tampal (paste) ke WhatsApp sekarang.");
     }
 
     function renderPlayerDropdown() {
@@ -468,14 +445,19 @@
         const selectedPlayer = playerSelect.value;
         if (!selectedPlayer) return alert('Sila pilih Nama Peserta pada menu dropdown terlebih dahulu!');
 
-        // HANTAR KEMASKINI KEPADA DATABASE LIVE
-        const updates = {};
-        updates[`sessions/${currentSessionCode}/results/${envNum}`] = {
+        sessionData.results[envNum] = {
             player: selectedPlayer,
             month: assignedSlot.month
         };
 
-        db.ref().update(updates);
+        // Kemaskini URL Hash dengan keputusan baharu
+        const jsonString = JSON.stringify(sessionData);
+        const encodedHash = btoa(unescape(encodeURIComponent(jsonString)));
+        window.location.hash = encodedHash;
+
+        renderEnvelopes();
+        renderTable();
+        renderPlayerDropdown();
     }
 
     function renderTable() {
@@ -498,7 +480,7 @@
     }
 
     function resetAll() {
-        if (confirm('Adakah anda pasti ingin memulakan sesi baharu dengan senarai nama baharu?')) {
+        if (confirm('Adakah anda pasti ingin memulakan sesi baharu dangan senarai nama baharu?')) {
             window.location.href = window.location.pathname; // Kosongkan hash dan kembali ke skrin utama
         }
     }
