@@ -6,15 +6,20 @@
     <title>Sistem Undian Duit Kutu Live</title>
     <style>
         :root {
+            /* Palette: Cream Cair Background & Turquoise Accents */
             --bg-cream-light: #faf7f2;
             --bg-cream-card: #fdfbf7;
             --card-border: #e2d9cc;
             --text-dark: #2d3748;
             --text-muted: #718096;
+            
+            /* Turquoise Shades */
             --turquoise-primary: #0d9488;
             --turquoise-light: #14b8a6;
             --turquoise-dark: #115e59;
             --turquoise-glow: rgba(13, 148, 136, 0.2);
+
+            /* Metallic Cream Gradient */
             --cream-gradient: linear-gradient(135deg, #ffffff 0%, #fef3c7 50%, #fde68a 100%);
             --cream-shadow: rgba(217, 119, 6, 0.2);
         }
@@ -85,7 +90,7 @@
             font-style: italic;
         }
 
-        textarea { height: 150px; resize: vertical; }
+        textarea { height: 160px; resize: vertical; }
 
         .btn {
             background: var(--turquoise-primary);
@@ -137,7 +142,7 @@
             border-radius: 6px;
             border: 1px solid #f59e0b;
             background: #fff;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
         }
 
@@ -191,6 +196,7 @@
             padding: 6px 12px;
             border-radius: 8px;
             width: 100%;
+            word-break: break-word;
         }
 
         .hidden { display: none !important; }
@@ -226,20 +232,20 @@
     <div class="header-title">💎 Cabutan Undi Duit Kutu</div>
     <p class="subtitle">Sistem Undian 6 Bulan (2 Orang Setiap Bulan)</p>
 
-    <!-- FASA 1: BORANG PENGANJUR -->
+    <!-- SKRIN PENGANJUR: ISI NAMA BARU -->
     <div id="setupView" class="section-box">
-        <label for="namesInput">📝 Masukkan Senarai 12 Nama Peserta (1 Nama Setiap Baris):</label>
-        <textarea id="namesInput">ICA</textarea>
-        <button type="button" class="btn" onclick="createSession()">✨ Cipta Sesi & Jana Pautan Peserta</button>
+        <label for="namesInput">📝 Masukkan Senarai Nama Peserta Sesi Ini (1 Nama Setiap Baris):</label>
+        <textarea id="namesInput" placeholder="Masukkan nama peserta di sini...&#10;Contoh:&#10;Ahmad&#10;Siti&#10;Ali"></textarea>
+        <button type="button" class="btn" onclick="createSession()">✨ Cipta Sesi & Jana Pautan WhatsApp</button>
     </div>
 
-    <!-- FASA 2: BILIK CABUTAN LIVE -->
+    <!-- SKRIN CABUTAN (PENGANJUR & PESERTA) -->
     <div id="drawView" class="hidden">
         
         <div class="share-box" id="shareBox">
-            <div style="font-weight:bold;">🔗 Kongsikan Pautan Ini Kepada Peserta:</div>
+            <div style="font-weight:bold;">🔗 Kongsikan Pautan Sesi Ini Kepada Peserta:</div>
             <input type="text" id="shareUrlInput" class="share-url-input" readonly onclick="this.select()">
-            <button type="button" onclick="copyLink()" style="margin-top:8px; padding:6px 12px; border-radius:6px; border:none; background:#f59e0b; color:white; font-weight:bold; cursor:pointer;">📋 Salin Pautan WhatsApp</button>
+            <button type="button" onclick="copyLink()" style="margin-top:8px; padding:8px 16px; border-radius:6px; border:none; background:#f59e0b; color:white; font-weight:bold; cursor:pointer;">📋 Salin Pautan WhatsApp</button>
         </div>
 
         <div class="section-box" style="margin-bottom: 15px;">
@@ -247,7 +253,7 @@
             <select id="activePlayer" onchange="checkPlayerSelection()"></select>
         </div>
 
-        <div class="status-bar" id="statusText">Memuatkan data...</div>
+        <div class="status-bar" id="statusText">Sila pilih nama peserta dari menu di atas.</div>
 
         <div class="envelopes-grid" id="envelopesContainer"></div>
 
@@ -262,43 +268,47 @@
             <tbody id="resultTable"></tbody>
         </table>
 
-        <button type="button" class="btn btn-reset" onclick="resetAll()">🔄 Mula Sesi Baru</button>
+        <button type="button" class="btn btn-reset" id="resetBtn" onclick="resetAll()">🔄 Mula Sesi Baharu / Tukar Nama</button>
     </div>
 </div>
 
 <script>
-    // MASUKKAN URL APPS SCRIPT ANDA DI SINI
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNYfLVyfkWBLb4vaw4OpJKAySqPxK9zMIvdC2G4EK2ZHZju8ZY1A2Xl_yUQalv6Qz9/exec";
-
-    let currentSessionCode = null;
     let sessionData = null;
-    let syncTimer = null;
 
-    // Semak jika dibuka melalui pautan peserta (URL mengandungi ?session=)
+    // 1. SEMAK SAMA ADA PESERTA BUKA PAUTAN YANG MEMBAWA NAMA
     window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionParam = urlParams.get('session');
+        if (window.location.hash && window.location.hash.length > 1) {
+            try {
+                // Read and decode data dynamically from URL Hash
+                const hashData = window.location.hash.substring(1);
+                const decodedJson = decodeURIComponent(escape(atob(hashData)));
+                sessionData = JSON.parse(decodedJson);
 
-        if (sessionParam) {
-            // Sesi Peserta secara automatik
-            currentSessionCode = sessionParam;
-            document.getElementById('setupView').classList.add('hidden');
-            document.getElementById('drawView').classList.remove('hidden');
-            document.getElementById('shareBox').classList.add('hidden'); // Sembunyikan kotak share untuk peserta
+                if (sessionData && sessionData.players && sessionData.players.length > 0) {
+                    // Paparkan Skrin Cabutan untuk Peserta
+                    document.getElementById('setupView').classList.add('hidden');
+                    document.getElementById('drawView').classList.remove('hidden');
+                    document.getElementById('shareBox').classList.add('hidden'); // Sembunyikan kotak share pada telefon peserta
 
-            listenToSession(currentSessionCode);
+                    renderPlayerDropdown();
+                    renderEnvelopes();
+                    renderTable();
+                }
+            } catch(e) {
+                console.error("Ralat membaca pautan sesi:", e);
+            }
         }
     };
 
-    async function createSession() {
+    // 2. PENGANJUR CIPTA SESI DENGAN NAMA-NAMA BARU
+    function createSession() {
         const input = document.getElementById('namesInput').value.trim();
-        if (!input) return alert('Sila masukkan senarai nama peserta!');
+        if (!input) return alert('Sila masukkan senarai nama peserta terlebih dahulu!');
 
         const players = input.split('\n').map(n => n.trim()).filter(n => n !== '');
         if (players.length === 0) return alert('Sila masukkan sekurang-kurangnya 1 nama.');
 
-        currentSessionCode = Math.floor(100000 + Math.random() * 900000).toString();
-
+        // Bina Slot 6 Bulan (2 Orang Sebulan)
         let drawSlots = [];
         const totalMonths = Math.ceil(players.length / 2);
         for (let i = 1; i <= totalMonths; i++) {
@@ -307,6 +317,7 @@
         }
         drawSlots = drawSlots.slice(0, players.length);
 
+        // Rawakkan Sampul (Fisher-Yates Shuffle)
         let secretEnvelopes = [...drawSlots];
         for (let i = secretEnvelopes.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -320,63 +331,31 @@
             results: {}
         };
 
-        // Jana pautan khas peserta
-        const shareUrl = `${window.location.origin}${window.location.pathname}?session=${currentSessionCode}`;
+        // ENCODE NAMA-NAMA KE DALAM LINK
+        const jsonString = JSON.stringify(sessionData);
+        const encodedHash = btoa(unescape(encodeURIComponent(jsonString)));
+        
+        // Kemaskini URL Hash
+        window.location.hash = encodedHash;
+
+        // Sediakan Pautan Untuk Dihantar Ke WhatsApp
+        const shareUrl = `${window.location.origin}${window.location.pathname}#${encodedHash}`;
         document.getElementById('shareUrlInput').value = shareUrl;
 
+        // Tukar Paparan Ke Skrin Cabutan
         document.getElementById('setupView').classList.add('hidden');
         document.getElementById('drawView').classList.remove('hidden');
 
-        // Simpan ke Google Sheets
-        saveDataToSheets();
-        
-        // Mula sync
-        listenToSession(currentSessionCode);
+        renderPlayerDropdown();
+        renderEnvelopes();
+        renderTable();
     }
 
     function copyLink() {
         const copyText = document.getElementById("shareUrlInput");
         copyText.select();
         document.execCommand("copy");
-        alert("Pautan telah disalin! Anda boleh tampal (paste) ke WhatsApp sekarang.");
-    }
-
-    function listenToSession(code) {
-        fetchDataFromSheets();
-        if (syncTimer) clearInterval(syncTimer);
-        syncTimer = setInterval(fetchDataFromSheets, 3000); // Sync setiap 3 saat
-    }
-
-    async function saveDataToSheets() {
-        try {
-            const encodedData = encodeURIComponent(JSON.stringify(sessionData));
-            await fetch(`${SCRIPT_URL}?action=save&code=${currentSessionCode}&data=${encodedData}`, {
-                mode: 'no-cors'
-            });
-        } catch (err) {
-            console.error("Gagal simpan ke Google Sheets:", err);
-        }
-    }
-
-    async function fetchDataFromSheets() {
-        try {
-            const res = await fetch(`${SCRIPT_URL}?action=get&code=${currentSessionCode}`);
-            const data = await res.json();
-
-            if (data.status === "error") {
-                document.getElementById('statusText').innerText = "Ralat: Sesi tidak dijumpai!";
-                return;
-            }
-
-            sessionData = data;
-            if(!sessionData.results) sessionData.results = {};
-
-            renderPlayerDropdown();
-            renderEnvelopes();
-            renderTable();
-        } catch (err) {
-            console.error("Gagal muat data:", err);
-        }
+        alert("Pautan Sesi ini telah disalin! Anda boleh hantar ke WhatsApp sekarang.");
     }
 
     function renderPlayerDropdown() {
@@ -399,7 +378,7 @@
             if (takenPlayers.includes(p)) {
                 opt.textContent = `${p} (Selesai Cabut)`;
                 opt.disabled = true;
-                opt.className = 'completed-player';
+                opt.className = 'completed-player'; // Warna Kelabu
             } else {
                 opt.textContent = p;
                 activeCount++;
@@ -454,14 +433,19 @@
     function pickEnvelope(envNum, assignedSlot) {
         const playerSelect = document.getElementById('activePlayer');
         const selectedPlayer = playerSelect.value;
-        if (!selectedPlayer) return alert('Sila pilih Nama Peserta terlebih dahulu!');
+        if (!selectedPlayer) return alert('Sila pilih Nama Peserta pada menu dropdown terlebih dahulu!');
 
+        // Simpan keputusan
         sessionData.results[envNum] = {
             player: selectedPlayer,
             month: assignedSlot.month
         };
 
-        saveDataToSheets();
+        // Kemaskini URL Hash dengan keputusan baharu
+        const jsonString = JSON.stringify(sessionData);
+        const encodedHash = btoa(unescape(encodeURIComponent(jsonString)));
+        window.location.hash = encodedHash;
+
         renderEnvelopes();
         renderTable();
         renderPlayerDropdown();
@@ -487,8 +471,8 @@
     }
 
     function resetAll() {
-        if (confirm('Adakah anda pasti ingin memulakan sesi baru?')) {
-            window.location.href = window.location.pathname; // Reset ke halaman utama
+        if (confirm('Adakah anda pasti ingin memulakan sesi baharu dengan nama-nama lain?')) {
+            window.location.href = window.location.pathname; // Padam Hash & kembali ke skrin penganjur
         }
     }
 </script>
