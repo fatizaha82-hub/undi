@@ -106,6 +106,13 @@
             background-color: #ffffff;
         }
 
+        /* STILISASI KELABU UNTUK NAMA YANG SELESAI */
+        select option.completed-player {
+            color: #94a3b8 !important;
+            background-color: #f1f5f9 !important;
+            font-style: italic;
+        }
+
         textarea {
             height: 150px;
             resize: vertical;
@@ -416,6 +423,7 @@ Hana</textarea>
             if (takenPlayers.includes(p)) {
                 opt.textContent = `${p} (Selesai Cabut)`;
                 opt.disabled = true;
+                opt.className = 'completed-player'; // Tambah kelas KELABU
             } else {
                 opt.textContent = p;
                 activeCount++;
